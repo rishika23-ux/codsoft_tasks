@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Waypoint — Project Management Tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  :root{
+    --ink:#1B1A2E;
+    --paper:#F6F5FB;
+    --card:#FFFFFF;
+    --indigo:#2B2A4C;
+    --indigo-soft:#413F6B;
+    --amber:#E8A33D;
+    --teal:#3FA796;
+    --rose:#D9636C;
+    --line:#E4E2F1;
+    --muted:#7A7891;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .disp{font-family:'Space Grotesk',sans-serif;}
+  ::selection{background:var(--amber); color:var(--ink);}
+  button{font-family:inherit; cursor:pointer;}
+  input, textarea, select{font-family:inherit;}
+
+  .shell{display:flex; min-height:100vh;}
+  .sidebar{
+    width:280px; flex-shrink:0;
+    background:var(--indigo);
+    color:#fff;
+    padding:28px 22px;
+    display:flex; flex-direction:column;
+    gap:26px;
+  }
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand-mark{
+    width:34px; height:34px; border-radius:9px;
+    background:linear-gradient(135deg, var(--amber), #f2c98d);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; color:var(--indigo); font-family:'Space Grotesk',sans-serif;
+    flex-shrink:0;
+  }
+  .brand-name{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:19px; letter-spacing:-0.02em;}
+  .brand-sub{font-size:11px; color:#B6B4D6; margin-top:1px; letter-spacing:.04em; text-transform:uppercase;}
+
+  .sec-label{font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:#9694BC; font-weight:600; margin-bottom:10px;}
+
+  .proj-list{display:flex; flex-direction:column; gap:4px;}
+  .proj-item{
+    display:flex; align-items:center; gap:10px;
+    padding:9px 10px; border-radius:8px;
+    color:#D7D5EE; font-size:13.5px; font-weight:500;
+    border:1px solid transparent;
+    transition:.15s;
+  }
+  .proj-item:hover{background:rgba(255,255,255,.06);}
+  .proj-item.active{background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.14); color:#fff;}
+  .proj-dot{width:8px; height:8px; border-radius:50%; flex-shrink:0;}
+  .proj-item span.name{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+
+  .new-proj-btn{
+    display:flex; align-items:center; gap:8px;
+    padding:9px 10px; border-radius:8px;
+    background:transparent; border:1px dashed rgba(255,255,255,.28);
+    color:#C8C6E6; font-size:13px; font-weight:600;
+    width:100%;
+  }
+  .new-proj-btn:hover{border-color:var(--amber); color:var(--amber);}
+
+  .side-foot{margin-top:auto; font-size:11.5px; color:#8886b0; line-height:1.5;}
+  .status-dot{display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:5px;}
+
+  .main{flex:1; padding:32px 40px; max-width:1240px;}
+  .topbar{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:26px; gap:20px; flex-wrap:wrap;}
+  .proj-title{font-family:'Space Grotesk',sans-serif; font-size:28px; font-weight:700; letter-spacing:-0.02em;}
+  .proj-meta{color:var(--muted); font-size:13.5px; margin-top:4px;}
+  .deadline-chip{
+    display:inline-flex; align-items:center; gap:6px;
+    background:#fff; border:1px solid var(--line); padding:6px 12px; border-radius:100px;
+    font-size:12.5px; font-weight:600; color:var(--indigo-soft);
+  }
+
+  .btn-primary{
+    background:var(--indigo); color:#fff; border:none;
+    padding:11px 18px; border-radius:9px; font-weight:600; font-size:13.5px;
+    display:inline-flex; align-items:center; gap:8px;
+    transition:.15s;
+  }
+  .btn-primary:hover{background:#38375f;}
+  .btn-primary:disabled{opacity:.5; cursor:default;}
+  .btn-ghost{
+    background:#fff; color:var(--indigo); border:1px solid var(--line);
+    padding:11px 16px; border-radius:9px; font-weight:600; font-size:13.5px;
+  }
+  .btn-ghost:hover{border-color:var(--indigo);}
+
+  .overview{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:28px;}
+  .ov-card{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px 18px;}
+  .ov-num{font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700;}
+  .ov-label{font-size:12px; color:var(--muted); margin-top:2px; font-weight:500;}
+
+  .progress-track{height:8px; background:var(--line); border-radius:100px; overflow:hidden; margin-top:10px;}
+  .progress-fill{height:100%; border-radius:100px; background:linear-gradient(90deg, var(--teal), #6fd0c1);}
+
+  .board{display:grid; grid-template-columns:repeat(3,1fr); gap:18px;}
+  .col{background:#F0EEF9; border-radius:14px; padding:14px; min-height:120px;}
+  .col-head{display:flex; align-items:center; justify-content:space-between; padding:4px 6px 12px;}
+  .col-title{font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:.04em; color:var(--indigo-soft);}
+  .col-count{background:#fff; border-radius:100px; padding:2px 9px; font-size:11.5px; font-weight:700; color:var(--muted);}
+
+  .task-card{
+    background:var(--card); border-radius:11px; padding:14px 14px 12px;
+    margin-bottom:10px; border:1px solid var(--line);
+    box-shadow:0 1px 2px rgba(27,26,46,.03);
+  }
+  .task-card:hover{border-color:#C9C6E8;}
+  .task-title{font-weight:600; font-size:14px; line-height:1.35; margin-bottom:8px;}
+  .task-row{display:flex; align-items:center; justify-content:space-between; margin-top:10px;}
+  .assignee{display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--indigo-soft); font-weight:600;}
+  .avatar{
+    width:20px; height:20px; border-radius:50%; background:var(--amber); color:#4a3005;
+    display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; flex-shrink:0;
+  }
+  .due-badge{font-size:11px; font-weight:600; padding:3px 8px; border-radius:100px;}
+  .due-ok{background:#E7F5F1; color:#1E7563;}
+  .due-soon{background:#FDF1DE; color:#95650E;}
+  .due-late{background:#FBEAEA; color:#B3333C;}
+
+  .status-select{
+    margin-top:10px; width:100%; font-size:11.5px; font-weight:600; color:var(--indigo-soft);
+    border:1px solid var(--line); border-radius:7px; padding:5px 7px; background:#fff;
+  }
+
+  .add-task-btn{
+    width:100%; text-align:left; padding:9px 10px; border-radius:9px; border:1px dashed #C9C6E8;
+    background:transparent; color:var(--indigo-soft); font-size:12.5px; font-weight:600;
+  }
+  .add-task-btn:hover{background:#fff;}
+
+  .empty-state{display:flex; flex-direction:column; align-items:center; justify-content:center; padding:80px 20px; text-align:center; color:var(--muted);}
+  .empty-state h3{font-family:'Space Grotesk',sans-serif; color:var(--ink); margin-bottom:6px;}
+
+  .overlay{position:fixed; inset:0; background:rgba(27,26,46,.5); backdrop-filter:blur(2px); display:flex; align-items:center; justify-content:center; z-index:50; padding:20px;}
+  .modal{background:#fff; border-radius:16px; padding:26px; width:100%; max-width:420px; box-shadow:0 20px 60px rgba(27,26,46,.25);}
+  .modal h3{font-family:'Space Grotesk',sans-serif; font-size:19px; margin:0 0 18px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block; font-size:12px; font-weight:600; color:var(--indigo-soft); margin-bottom:6px;}
+  .field input, .field textarea, .field select{width:100%; padding:10px 11px; border:1px solid var(--line); border-radius:8px; font-size:13.5px; color:var(--ink);}
+  .field input:focus, .field textarea:focus, .field select:focus{outline:2px solid var(--indigo); outline-offset:1px;}
+  .field textarea{resize:vertical; min-height:60px;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .modal-actions{display:flex; justify-content:flex-end; gap:10px; margin-top:20px;}
+  .color-picker{display:flex; gap:8px;}
+  .swatch{width:26px; height:26px; border-radius:50%; border:2px solid transparent; cursor:pointer;}
+  .swatch.selected{border-color:var(--ink);}
+  .error-banner{background:#FBEAEA; border:1px solid #F3C9CC; color:#B3333C; padding:10px 14px; border-radius:9px; font-size:13px; margin-bottom:18px;}
+  .loading-screen{display:flex; align-items:center; justify-content:center; height:100vh; width:100%; color:var(--muted); font-family:'Space Grotesk',sans-serif;}
+
+  @media (max-width: 900px){
+    .shell{flex-direction:column;}
+    .sidebar{width:100%;}
+    .main{padding:20px;}
+    .overview{grid-template-columns:repeat(2,1fr);}
+    .board{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const {useState, useEffect, useMemo} = React;
+
+const COLORS = ["#E8A33D","#3FA796","#D9636C","#6E8CD9","#9B6BD9"];
+const STATUSES = ["To Do","In Progress","Done"];
+const API_BASE = "/api"; // same-origin: frontend is served by the same Express app
+
+function addDays(n){
+  const d = new Date(); d.setDate(d.getDate()+n);
+  return d.toISOString().slice(0,10);
+}
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function daysLeft(dateStr){
+  return Math.ceil((new Date(dateStr) - new Date(todayISO())) / 86400000);
+}
+function dueBadge(dateStr, status){
+  if(status === "Done") return {cls:"due-ok", label:"Done"};
+  const d = daysLeft(dateStr);
+  if(d < 0) return {cls:"due-late", label: Math.abs(d) + "d overdue"};
+  if(d <= 2) return {cls:"due-soon", label: d===0 ? "Due today" : d + "d left"};
+  return {cls:"due-ok", label: d + "d left"};
+}
+function initials(name){
+  return (name||"?").split(" ").map(s=>s[0]).join("").slice(0,2).toUpperCase();
+}
+
+async function api(path, options){
+  const res = await fetch(API_BASE + path, {
+    headers: {"Content-Type": "application/json"},
+    ...options
+  });
+  if(!res.ok){
+    const body = await res.json().catch(()=>({}));
+    throw new Error(body.error || ("Request failed: " + res.status));
+  }
+  return res.json();
+}
+
+function App(){
+  const [projects, setProjects] = useState([]);
+  const [tasksAll, setTasksAll] = useState([]);
+  const [activeProject, setActiveProject] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showProjectModal, setShowProjectModal] = useState(false);
+  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [taskDefaultStatus, setTaskDefaultStatus] = useState("To Do");
+
+  async function refresh(){
+    try{
+      setError(null);
+      const data = await api("/data");
+      setProjects(data.projects);
+      setTasksAll(data.tasks);
+      setActiveProject(prev => prev && data.projects.find(p=>p._id===prev) ? prev : (data.projects[0]?._id || null));
+    }catch(err){
+      setError("Couldn't reach the backend API (" + err.message + "). Check that MONGO_URI is set and the server is running.");
+    }finally{
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => { refresh(); }, []);
+
+  const project = projects.find(p => p._id === activeProject);
+  const tasks = useMemo(() => tasksAll.filter(t => t.projectId === activeProject), [tasksAll, activeProject]);
+
+  const overallProgress = tasks.length
+    ? Math.round(tasks.reduce((s,t)=>s+Number(t.progress||0),0) / tasks.length)
+    : 0;
+
+  async function addProject(proj){
+    try{
+      const created = await api("/projects", {method:"POST", body: JSON.stringify(proj)});
+      setProjects(p => [...p, created]);
+      setActiveProject(created._id);
+      setShowProjectModal(false);
+    }catch(err){ setError(err.message); }
+  }
+
+  async function addTask(task){
+    try{
+      const created = await api("/tasks", {method:"POST", body: JSON.stringify({...task, projectId: activeProject})});
+      setTasksAll(t => [...t, created]);
+      setShowTaskModal(false);
+    }catch(err){ setError(err.message); }
+  }
+
+  async function updateTaskStatus(taskId, status){
+    setTasksAll(t => t.map(x => x._id===taskId ? {...x, status, progress: status==="Done"?100:x.progress} : x)); // optimistic
+    try{
+      const updated = await api("/tasks/" + taskId, {method:"PATCH", body: JSON.stringify({status})});
+      setTasksAll(t => t.map(x => x._id===taskId ? updated : x));
+    }catch(err){ setError(err.message); refresh(); }
+  }
+
+  async function deleteProject(id){
+    if(!confirm("Delete this project and all its tasks?")) return;
+    try{
+      await api("/projects/" + id, {method:"DELETE"});
+      const remaining = projects.filter(p=>p._id!==id);
+      setProjects(remaining);
+      setTasksAll(t => t.filter(x=>x.projectId!==id));
+      setActiveProject(remaining[0]?._id || null);
+    }catch(err){ setError(err.message); }
+  }
+
+  if(loading){
+    return <div className="loading-screen">Loading Waypoint…</div>;
+  }
+
+  return (
+    <div className="shell">
+      <aside className="sidebar">
+        <div className="brand">
+          <div className="brand-mark disp">W</div>
+          <div>
+            <div className="brand-name">Waypoint</div>
+            <div className="brand-sub">Project Tracker</div>
+          </div>
+        </div>
+
+        <div>
+          <div className="sec-label">Projects</div>
+          <div className="proj-list">
+            {projects.map(p => (
+              <div key={p._id} className={"proj-item" + (p._id===activeProject ? " active" : "")} onClick={()=>setActiveProject(p._id)}>
+                <span className="proj-dot" style={{background:p.color}}></span>
+                <span className="name">{p.name}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{marginTop:10}}>
+            <button className="new-proj-btn" onClick={()=>setShowProjectModal(true)}>+ New project</button>
+          </div>
+        </div>
+
+        <div className="side-foot">
+          <span className="status-dot" style={{background: error ? "#D9636C" : "#3FA796"}}></span>
+          {error ? "Backend unreachable" : "Connected to live API"} — Task 2, CodSoft Web Dev Internship.
+        </div>
+      </aside>
+
+      <main className="main">
+        {error && <div className="error-banner">{error}</div>}
+
+        {!project ? (
+          <div className="empty-state">
+            <h3 className="disp">No project yet</h3>
+            <p>Create your first project to start assigning tasks.</p>
+            <div style={{marginTop:14}}>
+              <button className="btn-primary" onClick={()=>setShowProjectModal(true)}>+ New project</button>
+            </div>
+          </div>
+        ) : (
+          <React.Fragment>
+            <div className="topbar">
+              <div>
+                <div className="proj-title">{project.name}</div>
+                <div className="proj-meta">{project.description || "No description"}</div>
+              </div>
+              <div style={{display:"flex", gap:10, alignItems:"center"}}>
+                <span className="deadline-chip">🗓 Due {project.deadline}</span>
+                <button className="btn-ghost" onClick={()=>deleteProject(project._id)}>Delete project</button>
+                <button className="btn-primary" onClick={()=>{setTaskDefaultStatus("To Do"); setShowTaskModal(true);}}>+ Add task</button>
+              </div>
+            </div>
+
+            <div className="overview">
+              <div className="ov-card">
+                <div className="ov-num disp">{tasks.length}</div>
+                <div className="ov-label">Total tasks</div>
+              </div>
+              <div className="ov-card">
+                <div className="ov-num disp">{tasks.filter(t=>t.status==="Done").length}</div>
+                <div className="ov-label">Completed</div>
+              </div>
+              <div className="ov-card">
+                <div className="ov-num disp">{Math.max(daysLeft(project.deadline),0)}</div>
+                <div className="ov-label">Days to deadline</div>
+              </div>
+              <div className="ov-card">
+                <div className="ov-num disp">{overallProgress}%</div>
+                <div className="ov-label">Overall progress</div>
+                <div className="progress-track"><div className="progress-fill" style={{width:overallProgress+"%"}}></div></div>
+              </div>
+            </div>
+
+            <div className="board">
+              {STATUSES.map(status => {
+                const col = tasks.filter(t=>t.status===status);
+                return (
+                  <div className="col" key={status}>
+                    <div className="col-head">
+                      <span className="col-title">{status}</span>
+                      <span className="col-count">{col.length}</span>
+                    </div>
+                    {col.map(t => {
+                      const badge = dueBadge(t.deadline, t.status);
+                      return (
+                        <div className="task-card" key={t._id}>
+                          <div className="task-title">{t.title}</div>
+                          <div className="progress-track"><div className="progress-fill" style={{width:(t.progress||0)+"%"}}></div></div>
+                          <div className="task-row">
+                            <span className="assignee">
+                              <span className="avatar">{initials(t.assignee)}</span>
+                              {t.assignee}
+                            </span>
+                            <span className={"due-badge " + badge.cls}>{badge.label}</span>
+                          </div>
+                          <select className="status-select" value={t.status} onChange={e=>updateTaskStatus(t._id, e.target.value)}>
+                            {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                          </select>
+                        </div>
+                      );
+                    })}
+                    <button className="add-task-btn" onClick={()=>{setTaskDefaultStatus(status); setShowTaskModal(true);}}>+ Add task to {status}</button>
+                  </div>
+                );
+              })}
+            </div>
+          </React.Fragment>
+        )}
+      </main>
+
+      {showProjectModal && <ProjectModal onClose={()=>setShowProjectModal(false)} onSave={addProject} />}
+      {showTaskModal && <TaskModal defaultStatus={taskDefaultStatus} onClose={()=>setShowTaskModal(false)} onSave={addTask} />}
+    </div>
+  );
+}
+
+function ProjectModal({onClose, onSave}){
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [deadline, setDeadline] = useState(addDays(7));
+  const [color, setColor] = useState(COLORS[0]);
+  const [saving, setSaving] = useState(false);
+
+  async function submit(e){
+    e.preventDefault();
+    if(!name.trim()) return;
+    setSaving(true);
+    await onSave({name: name.trim(), description: description.trim(), deadline, color});
+    setSaving(false);
+  }
+
+  return (
+    <div className="overlay" onClick={(e)=>{if(e.target===e.currentTarget) onClose();}}>
+      <form className="modal" onSubmit={submit}>
+        <h3>New project</h3>
+        <div className="field">
+          <label>Project name</label>
+          <input autoFocus value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. Mobile App v2" required />
+        </div>
+        <div className="field">
+          <label>Description</label>
+          <textarea value={description} onChange={e=>setDescription(e.target.value)} placeholder="What's this project about?" />
+        </div>
+        <div className="field">
+          <label>Deadline</label>
+          <input type="date" value={deadline} onChange={e=>setDeadline(e.target.value)} required />
+        </div>
+        <div className="field">
+          <label>Color</label>
+          <div className="color-picker">
+            {COLORS.map(c => (
+              <span key={c} className={"swatch" + (c===color?" selected":"")} style={{background:c}} onClick={()=>setColor(c)}></span>
+            ))}
+          </div>
+        </div>
+        <div className="modal-actions">
+          <button type="button" className="btn-ghost" onClick={onClose}>Cancel</button>
+          <button type="submit" className="btn-primary" disabled={saving}>{saving ? "Creating…" : "Create project"}</button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function TaskModal({defaultStatus, onClose, onSave}){
+  const [title, setTitle] = useState("");
+  const [assignee, setAssignee] = useState("");
+  const [deadline, setDeadline] = useState(addDays(3));
+  const [status, setStatus] = useState(defaultStatus);
+  const [progress, setProgress] = useState(0);
+  const [saving, setSaving] = useState(false);
+
+  async function submit(e){
+    e.preventDefault();
+    if(!title.trim() || !assignee.trim()) return;
+    setSaving(true);
+    await onSave({title: title.trim(), assignee: assignee.trim(), deadline, status, progress: Number(progress)});
+    setSaving(false);
+  }
+
+  return (
+    <div className="overlay" onClick={(e)=>{if(e.target===e.currentTarget) onClose();}}>
+      <form className="modal" onSubmit={submit}>
+        <h3>New task</h3>
+        <div className="field">
+          <label>Task title</label>
+          <input autoFocus value={title} onChange={e=>setTitle(e.target.value)} placeholder="e.g. Build login page" required />
+        </div>
+        <div className="row2">
+          <div className="field">
+            <label>Assigned to</label>
+            <input value={assignee} onChange={e=>setAssignee(e.target.value)} placeholder="Name" required />
+          </div>
+          <div className="field">
+            <label>Deadline</label>
+            <input type="date" value={deadline} onChange={e=>setDeadline(e.target.value)} required />
+          </div>
+        </div>
+        <div className="row2">
+          <div className="field">
+            <label>Status</label>
+            <select value={status} onChange={e=>setStatus(e.target.value)}>
+              {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+          <div className="field">
+            <label>Progress ({progress}%)</label>
+            <input type="range" min="0" max="100" value={progress} onChange={e=>setProgress(e.target.value)} />
+          </div>
+        </div>
+        <div className="modal-actions">
+          <button type="button" className="btn-ghost" onClick={onClose}>Cancel</button>
+          <button type="submit" className="btn-primary" disabled={saving}>{saving ? "Adding…" : "Add task"}</button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
